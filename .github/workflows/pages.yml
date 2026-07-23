@@ -41,5 +41,5 @@ jobs:
           path: _site
       - name: Deploy synthetic report
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
