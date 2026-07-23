@@ -1,0 +1,13 @@
+{
+  "export_notes": {
+    "address": "1847 Example Street, Apt 5B",
+    "scope": "All values in this export are deterministic fiction."
+  },
+  "profile": {
+    "china_id_style": "990000199001010018",
+    "display_name": "Avery North",
+    "email": "avery.north@example.com",
+    "government_id": "899-12-3456",
+    "phone": "+1 (202) 555-0147"
+  }
+}

@@ -1,0 +1,8 @@
+SYNTHETIC SECURITY REVIEW — NO REAL CREDENTIALS
+
+The disclosure copy accidentally retained these intentionally non-working examples:
+aws_access_key = AKIAIOSFODNN7EXAMPLE
+github_token = ghp_000000000000000000000000000000000000
+test_card = 4111 1111 1111 1111
+
+The repeated contact is avery.north@example.com.

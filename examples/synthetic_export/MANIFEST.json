@@ -1,0 +1,39 @@
+{
+  "dataset": "Data XRay Local deterministic synthetic export",
+  "files": [
+    {
+      "path": "contact-register.xlsx",
+      "sha256": "d7380753cc016e8ad9cc6f5b89b7fff84c8dadebf2ab737870b1e94f6c0e9d98"
+    },
+    {
+      "path": "contacts.csv",
+      "sha256": "1d6928310b3f7dbdf5c4cde45ca61bc107908915248cd75db2458a1104bbafc6"
+    },
+    {
+      "path": "disclosure-brief.docx",
+      "sha256": "60a701c82a0334e5719c34b7fd89aa597c598870a7ffd8d82850ae93e5fd9b8e"
+    },
+    {
+      "path": "field-photo.jpg",
+      "sha256": "908b17ea7a7a2ad87e9c633c5593f54640e082246d2d58bf322edd040ef39430"
+    },
+    {
+      "path": "LICENSE.txt",
+      "sha256": "4251913da01f14c416730770b14f1986b521d962bc7d7426d831d0ad2bd14862"
+    },
+    {
+      "path": "profile.json",
+      "sha256": "d631a239047791bc14cf4aa362ed96cad12975e7ef306f67c879ec846a66ae78"
+    },
+    {
+      "path": "README.txt",
+      "sha256": "37bea1ce21ce268453b4f24ee65156c8fa104ad417f8269b1d1fb6f9677438ad"
+    },
+    {
+      "path": "review-notes.txt",
+      "sha256": "3ce8d2ae44d5d157774c481966dddfb8fe8bf7a3ff87b170347a67f8ba85ab21"
+    }
+  ],
+  "license": "CC0-1.0",
+  "real_personal_data": false
+}
