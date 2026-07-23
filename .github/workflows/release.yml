@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+      - name: Install native MIME runtime
+        run: sudo apt-get update && sudo apt-get install --yes libmagic1
+      - name: Install locked dependencies and project
+        run: |
+          python -m pip install -r requirements-dev.lock
+          python -m pip install --no-deps -e .
+      - name: Confirm tag and package versions agree
+        run: |
+          python -c "from data_xray_local import __version__; import os; assert os.environ['GITHUB_REF_NAME'] == f'v{__version__}'"
+      - name: Re-run the full quality gate
+        run: python scripts/verify.py
+      - name: Generate demo and release assets
+        run: |
+          python scripts/demo.py
+          python scripts/package_release.py
+          python scripts/release_check.py
+      - name: Create or update the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist-release/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist-release/* --verify-tag --title "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
+          fi
+      - name: Verify published release metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$GITHUB_REF_NAME" --json tagName,isDraft,isPrerelease,url,assets

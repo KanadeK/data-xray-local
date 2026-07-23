@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose a bounded privacy-audit improvement.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Privacy review problem
+      description: What user decision is difficult today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe input, masked output, failure behavior, and source-data lifecycle.
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Synthetic fixture plan
+      description: Explain how the change can be tested without real personal data.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Local-first boundary
+      options:
+        - label: The proposal can work offline or has a deterministic offline path.
+          required: true
+        - label: The proposal does not require persisting complete detector matches.
+          required: true
+
