@@ -2,28 +2,21 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
 from data_xray_local.reporting import write_report_bundle  # noqa: E402
 from data_xray_local.services.scanner import ScannerService  # noqa: E402
-
-
-def _verify_manifest(sample: Path) -> None:
-    manifest = json.loads((sample / "MANIFEST.json").read_text(encoding="utf-8"))
-    if manifest.get("real_personal_data") is not False:
-        raise RuntimeError("sample manifest must explicitly deny real personal data")
-    if manifest.get("license") != "CC0-1.0":
-        raise RuntimeError("sample fixture license is not CC0-1.0")
+from scripts.sample_manifest import verify_sample_manifest  # noqa: E402
 
 
 def main() -> int:
     sample = ROOT / "examples" / "synthetic_export"
-    _verify_manifest(sample)
+    verify_sample_manifest(sample)
     report = ScannerService().scan(sample, no_network=True)
     output = ROOT / "reports" / "demo"
     json_path, html_path = write_report_bundle(report, output)

@@ -3,7 +3,7 @@
   "files": [
     {
       "path": "contact-register.xlsx",
-      "sha256": "d7380753cc016e8ad9cc6f5b89b7fff84c8dadebf2ab737870b1e94f6c0e9d98"
+      "sha256": "68f5aadb509e389aeea6f52e0c3eab1774152d74313b38f15dbd3e651018b963"
     },
     {
       "path": "contacts.csv",
@@ -23,7 +23,7 @@
     },
     {
       "path": "profile.json",
-      "sha256": "d631a239047791bc14cf4aa362ed96cad12975e7ef306f67c879ec846a66ae78"
+      "sha256": "535c189d44d17bffda73f8e90f42acb8fe8ca052490954dfa4073d13b388ad2c"
     },
     {
       "path": "README.txt",

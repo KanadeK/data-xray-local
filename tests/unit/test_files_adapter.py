@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from data_xray_local.adapters import files as files_module
 from data_xray_local.adapters.files import (
     FileAccessError,
     FileTooLargeError,
@@ -13,6 +14,17 @@ from data_xray_local.adapters.files import (
     UnsupportedFileError,
 )
 from data_xray_local.domain.models import DataCategory
+
+
+def test_windows_uses_mimetype_fallback_without_loading_native_magic(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_import(_name: str) -> None:
+        raise AssertionError("Windows must not invoke the native libmagic loader")
+
+    monkeypatch.setattr(files_module, "import_module", unexpected_import)
+
+    assert files_module._load_magic_module("win32") is None
 
 
 def test_extract_text_csv_and_json(tmp_path: Path) -> None:

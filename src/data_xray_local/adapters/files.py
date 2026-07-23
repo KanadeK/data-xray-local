@@ -7,6 +7,7 @@ import json
 import mimetypes
 import os
 import re
+import sys
 import zipfile
 from contextlib import suppress
 from dataclasses import dataclass
@@ -25,11 +26,17 @@ class MagicModule(Protocol):
     def from_file(self, filename: str, *, mime: bool = False) -> str: ...
 
 
-magic_module: MagicModule | None
-try:
-    magic_module = cast(MagicModule, import_module("magic"))
-except (ImportError, OSError):  # pragma: no cover - environment-specific optional native load
-    magic_module = None
+def _load_magic_module(platform_name: str = sys.platform) -> MagicModule | None:
+    """Load libmagic only on platforms where its native loader is reliable."""
+    if platform_name == "win32":
+        return None
+    try:
+        return cast(MagicModule, import_module("magic"))
+    except (ImportError, OSError):  # pragma: no cover - environment-specific optional native load
+        return None
+
+
+magic_module = _load_magic_module()
 
 
 TEXT_SUFFIXES = {

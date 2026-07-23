@@ -48,10 +48,11 @@ jobs:
   compatibility:
     name: ${{ matrix.os }} / Python 3.12
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [windows-2022, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -64,6 +65,6 @@ jobs:
           python -m pip install -r requirements-dev.lock
           python -m pip install --no-deps -e .
       - name: Run cross-platform tests
-        run: python -m pytest -q
+        run: python -u -m pytest -q -p no:terminalprogress
       - name: Run the bundled demo
         run: python scripts/demo.py

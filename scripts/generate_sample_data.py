@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import zipfile
+from datetime import UTC, datetime
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -13,6 +15,10 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "examples" / "synthetic_export"
+FIXED_ZIP_TIMESTAMP = (2026, 1, 1, 0, 0, 0)
+FIXED_DOCUMENT_TIME = datetime(2026, 1, 1, tzinfo=UTC)
+FIXED_DOCUMENT_TIME_TEXT = "2026-01-01T00:00:00Z"
+MODIFIED_PROPERTY_PATTERN = re.compile(rb"(<dcterms:modified\b[^>]*>)[^<]*(</dcterms:modified>)")
 
 CONTACTS_CSV = """name,email,phone,address
 Avery North,avery.north@example.com,+1 (202) 555-0147,"1847 Example Street, Apt 5B"
@@ -98,10 +104,43 @@ def _write_docx(path: Path) -> None:
             "word/document.xml": DOCX_DOCUMENT,
         }
         for name, content in sorted(entries.items()):
-            info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+            info = zipfile.ZipInfo(name, date_time=FIXED_ZIP_TIMESTAMP)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
             archive.writestr(info, content.encode("utf-8"))
+
+
+def _normalize_zip(path: Path) -> None:
+    temporary = path.with_name(f".{path.name}.deterministic")
+    try:
+        with (
+            zipfile.ZipFile(path, "r") as source,
+            zipfile.ZipFile(
+                temporary,
+                "w",
+                compression=zipfile.ZIP_DEFLATED,
+                compresslevel=9,
+            ) as destination,
+        ):
+            for source_info in sorted(source.infolist(), key=lambda item: item.filename):
+                content = source.read(source_info.filename)
+                if source_info.filename == "docProps/core.xml":
+                    content, replacements = MODIFIED_PROPERTY_PATTERN.subn(
+                        rb"\g<1>" + FIXED_DOCUMENT_TIME_TEXT.encode("ascii") + rb"\g<2>",
+                        content,
+                    )
+                    if replacements != 1:
+                        raise RuntimeError(
+                            "XLSX core properties did not contain one modified timestamp"
+                        )
+                info = zipfile.ZipInfo(source_info.filename, date_time=FIXED_ZIP_TIMESTAMP)
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.create_system = 3
+                info.external_attr = (0o40755 if source_info.is_dir() else 0o100644) << 16
+                destination.writestr(info, content)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _write_xlsx(path: Path) -> None:
@@ -115,8 +154,11 @@ def _write_xlsx(path: Path) -> None:
     workbook.properties.creator = "Avery North"
     workbook.properties.lastModifiedBy = "Morgan Vale"
     workbook.properties.title = "Synthetic privacy audit workbook"
+    workbook.properties.created = FIXED_DOCUMENT_TIME
+    workbook.properties.modified = FIXED_DOCUMENT_TIME
     workbook.save(path)
     workbook.close()
+    _normalize_zip(path)
 
 
 def _write_image(path: Path) -> None:
@@ -147,36 +189,37 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def generate() -> None:
-    resolved_root = ROOT.resolve()
-    resolved_target = TARGET.resolve()
+def generate(target: Path = TARGET, *, allowed_root: Path = ROOT) -> None:
+    resolved_root = allowed_root.resolve()
+    resolved_target = target.resolve()
     if resolved_root not in resolved_target.parents:
         raise RuntimeError("sample target escaped the repository")
-    if TARGET.exists():
-        shutil.rmtree(TARGET)
-    TARGET.mkdir(parents=True)
+    if target.exists():
+        shutil.rmtree(target)
+    target.mkdir(parents=True)
 
-    (TARGET / "contacts.csv").write_text(CONTACTS_CSV, encoding="utf-8", newline="\n")
-    (TARGET / "profile.json").write_text(
+    (target / "contacts.csv").write_text(CONTACTS_CSV, encoding="utf-8", newline="\n")
+    (target / "profile.json").write_text(
         json.dumps(PROFILE_JSON, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
-    (TARGET / "review-notes.txt").write_text(NOTES_TEXT, encoding="utf-8", newline="\n")
-    (TARGET / "README.txt").write_text(
+    (target / "review-notes.txt").write_text(NOTES_TEXT, encoding="utf-8", newline="\n")
+    (target / "README.txt").write_text(
         "All names, identifiers, addresses, credentials, metadata, and images in this folder "
         "are deterministic fictional test data. License: CC0-1.0.\n",
         encoding="utf-8",
         newline="\n",
     )
-    (TARGET / "LICENSE.txt").write_text(
+    (target / "LICENSE.txt").write_text(
         "The synthetic fixtures in this directory are dedicated to the public domain under "
         "CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/\n",
         encoding="utf-8",
         newline="\n",
     )
-    _write_docx(TARGET / "disclosure-brief.docx")
-    _write_xlsx(TARGET / "contact-register.xlsx")
-    _write_image(TARGET / "field-photo.jpg")
+    _write_docx(target / "disclosure-brief.docx")
+    _write_xlsx(target / "contact-register.xlsx")
+    _write_image(target / "field-photo.jpg")
 
     manifest = {
         "dataset": "Data XRay Local deterministic synthetic export",
@@ -184,11 +227,11 @@ def generate() -> None:
         "real_personal_data": False,
         "files": [
             {"path": path.name, "sha256": _sha256(path)}
-            for path in sorted(TARGET.iterdir())
+            for path in sorted(target.iterdir())
             if path.name != "MANIFEST.json"
         ],
     }
-    (TARGET / "MANIFEST.json").write_text(
+    (target / "MANIFEST.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
         newline="\n",
