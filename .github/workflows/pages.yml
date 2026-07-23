@@ -36,7 +36,7 @@ jobs:
           python scripts/demo.py
           install -D reports/demo/data-xray-report.html _site/index.html
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - name: Deploy synthetic report
